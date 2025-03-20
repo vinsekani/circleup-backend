@@ -3,7 +3,6 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const authRoutes = require("./routes/auth");
-const stkRoute = require("./routes/stk");
 const groupRoutes = require("./routes/group");
 const memberRoutes = require("./routes/member")
 const meetingRoutes = require("./routes/meeting")
@@ -30,7 +29,6 @@ app.use("/api/group", groupRoutes);
 app.use("/api/member", memberRoutes)
 app.use("/api/meeting", meetingRoutes)
 app.use("/api/announcement", announcementRoutes)
-app.use("/api/mpesa", stkRoute);
 
 app.get("/", (req, res) => {
   res.json({ message: "circleup, Streamline your contacts with sekani only" });
