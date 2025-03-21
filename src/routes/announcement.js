@@ -5,7 +5,7 @@ const { addAnnouncement, getGroupAnnouncements} = require("../controllers/announ
 const { verifyToken } = require("../middleware/auth");
 
 
-router.post("/new", verifyToken, addAnnouncement);
+router.post("/recent", verifyToken, addAnnouncement);
 router.get("/:groupId", verifyToken, getGroupAnnouncements);
 
 module.exports = router;

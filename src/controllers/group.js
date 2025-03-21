@@ -4,6 +4,10 @@ const User = require("../models/user");
 // Create Group
 const createGroup = async (req, res) => {
   try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: "Unauthorized: No valid user found" });
+    }
+
     const { name, slogan, dailyContribution } = req.body;
     const adminId = req.user.id;
 
@@ -19,28 +23,36 @@ const createGroup = async (req, res) => {
       slogan,
       dailyContribution,
       admin: adminId,
-      members: [],
-      mettings:[],
-      announcements:[],
+      members: [adminId], // Add the admin as the first member
+      meetings: [], // Fixed typo: "mettings" → "meetings"
+      announcements: [],
     });
 
     await newGroup.save();
     return res.status(201).json(newGroup);
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    console.error("Error Details:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 // Get all groups for an admin
 const getGroupsByAdmin = async (req, res) => {
   try {
-    const adminId = req.user.id; // Ensure user is authenticated
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: "Unauthorized: No valid user found" });
+    }
+
+    const adminId = req.user.id;
     const groups = await Group.find({ admin: adminId }).populate("members");
+
     return res.status(200).json(groups);
   } catch (error) {
-    return res.status(500).json({ message: "Internal Server Error" });
+    console.error("Error Details:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 module.exports = { createGroup, getGroupsByAdmin };

@@ -5,7 +5,7 @@ const announcementSchema = new mongoose.Schema({
   content: { type: String, require: true },
   group: { type: mongoose.Schema.Types.ObjectId, ref: "Group", required: true }, // Belongs to a group
 },
-{timestamp: true}
+{timestamps: true}
 );
 
 module.exports = mongoose.model("Announcement", announcementSchema)

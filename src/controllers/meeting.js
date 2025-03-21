@@ -4,10 +4,10 @@ const Group = require("../models/group")
 // Add Meeting to Group
 const addMeeting = async (req, res) => {
     try {
-        const{ title, time, groupId, location, date} = req.body;
+        const{ title, time, content, groupId, status, location, date} = req.body;
 
         // Validate Inputes
-        if(!title || !time || !groupId || !location || !date){
+        if(!title || !time || !content || !groupId || !location || !date){
             return res.status(400).json({message:"missing required fields"})
         }
 
@@ -21,7 +21,7 @@ const addMeeting = async (req, res) => {
             return res.status(400).json({message: "Meeting already exists"})
         }
 
-        const newMeeting = new Meeting({title, time, group: groupId, location, date})
+        const newMeeting = new Meeting({title, time, content, status:"Next", group: groupId, location, date})
         await newMeeting.save()
 
         group.meetings.push(newMeeting._id)

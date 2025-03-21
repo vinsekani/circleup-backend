@@ -24,26 +24,67 @@ const authenticateUser = async (req, res, next) => {
   }
 };
 
-const verifyToken = async (req, res, next) => {
+
+
+// const verifyToken = async (req, res, next) => {
+//   try {
+//     const token = req.header("Authorization")?.split(" ")[1];
+
+//     console.log("Received Token:", token);
+
+//     if (!token) {
+//       return res.status(401).json({ message: "Unauthorized: No token provided" });
+//     }
+
+//     // Decode Token
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     console.log("Decoded Token Data:", decoded); // Debugging
+
+//     // Find User
+//     const user = await User.findById(decoded.id).select("-password");
+//     if (!user) {
+//       return res.status(404).json({ message: "User not found" });
+//     }
+
+//     req.user = user;
+//     console.log("Authenticated User:", req.user); // Debugging
+
+//     next();
+//   } catch (error) {
+//     console.error("Token Verification Error:", error.message);
+//     return res.status(403).json({ message: "Invalid or Expired Token", error: error.message });
+//   }
+// };
+
+
+
+
+const verifyToken = (req, res, next) => {
   try {
     const token = req.header("Authorization")?.split(" ")[1];
 
-    console.log("Received Token:", token); // Debugging
+    console.log("Received Token:", token);
 
     if (!token) {
-      return res.status(401).json({ message: "Unauthorized: No token" });
+      return res.status(401).json({ message: "Unauthorized: No token provided" });
     }
 
+    // Decode Token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await User.findById(decoded.id).select("-password");
+    console.log("Decoded Token Data:", decoded); // Debugging
 
-    console.log("Decoded User:", req.user); // Debugging
+    // Attach decoded data to request (without fetching user from DB)
+    req.user = decoded;
 
     next();
   } catch (error) {
-    return res.status(403).json({ message: "Invalid or Expired Token" });
+    console.error("Token Verification Error:", error.message);
+    return res.status(403).json({ message: "Invalid or Expired Token", error: error.message });
   }
 };
+
+module.exports = { verifyToken };
+
 
 
 module.exports = {authenticateUser,verifyToken};

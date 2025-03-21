@@ -30,11 +30,10 @@ const addAnnouncement = async (req, res) => {
       .status(201)
       .json({ message: "Annoucement sent successfully", newAnnouncement });
   } catch (error) {
-    console.error(error);
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
-  }
+    console.error("Error Details:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+}
+
 };
 
 // Get all members in a group
@@ -44,8 +43,10 @@ const getGroupAnnouncements = async (req, res) => {
     const announcements = await Announcement.find({ group: groupId });
     return res.status(200).json(announcements);
   } catch (error) {
-    return res.status(500).json({ message: "Internal Server Error" });
-  }
+    console.error("Error Details:", error); // Log full error details
+    return res.status(500).json({ message: "Server error", error: error.message });
+}
+
 };
 
 
