@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 
 const signUp = async (req, res) => {
   try {
-    const { firstName, phone, email, photo, password, role } = req.body;
+    const { fullName, phone, email, photo, coverPhoto, password, role } = req.body;
     const user = await User.findOne({ phone });
 
     if (user) {
@@ -14,10 +14,11 @@ const signUp = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = new User({
-      firstName,
+      fullName,
       phone,
       email,
       photo,
+      coverPhoto,
       password: hashedPassword,
       role,
     });
