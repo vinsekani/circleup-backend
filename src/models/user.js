@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       require,
       default:
-        "https://res.cloudinary.com/oroko/image/upload/v1737614653/user_pigxco.jpg",
+        "https://res.cloudinary.com/oroko/image/upload/v1738214185/og5jorctnuzqifdbywel.jpg",
     },
     password: { type: String, require },
     role: { type: String, required: true, enum: ["admin", "member"] },
