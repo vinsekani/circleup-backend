@@ -21,7 +21,7 @@ const addMeeting = async (req, res) => {
             return res.status(400).json({message: "Meeting already exists"})
         }
 
-        const newMeeting = new Meeting({title, time, content, status:"Next", group: groupId, location, date})
+        const newMeeting = new Meeting({title, time, content, status, group: groupId, location, date})
         await newMeeting.save()
 
         group.meetings.push(newMeeting._id)
