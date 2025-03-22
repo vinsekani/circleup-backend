@@ -31,8 +31,8 @@ const addMeeting = async (req, res) => {
     } catch (error) {
         return res.status(500).json({ message: "Server error", error: error.message });
     }
-
 }
+
 //Get all meetings in a group
 const getGroupMeetings = async (req, res) => {
     try {
@@ -44,5 +44,59 @@ const getGroupMeetings = async (req, res) => {
     }
 }
 
+// Update a meeting
+const updateMeeting = async (req, res) => {
+    try {
+        const { meetingId } = req.params;
+        const { title, time, content, status, location, date } = req.body;
 
-module.exports = { addMeeting, getGroupMeetings };
+        // Find the meeting
+        const meeting = await Meeting.findById(meetingId);
+        if (!meeting) {
+            return res.status(404).json({ message: "Meeting not found" });
+        }
+
+        // Update meeting fields
+        meeting.title = title || meeting.title;
+        meeting.time = time || meeting.time;
+        meeting.content = content || meeting.content;
+        meeting.status = status || meeting.status;
+        meeting.location = location || meeting.location;
+        meeting.date = date || meeting.date;
+
+        // Save the updated meeting
+        await meeting.save();
+
+        return res.status(200).json({ message: "Meeting updated successfully", meeting });
+    } catch (error) {
+        return res.status(500).json({ message: "Server error", error: error.message });
+    }
+}
+
+// Delete a meeting
+const deleteMeeting = async (req, res) => {
+    try {
+        const { meetingId } = req.params;
+
+        // Find the meeting
+        const meeting = await Meeting.findById(meetingId);
+        if (!meeting) {
+            return res.status(404).json({ message: "Meeting not found" });
+        }
+
+        // Remove meeting from group's meetings array
+        await Group.findByIdAndUpdate(
+            meeting.group,
+            { $pull: { meetings: meetingId } }
+        );
+
+        // Delete the meeting
+        await Meeting.findByIdAndDelete(meetingId);
+
+        return res.status(200).json({ message: "Meeting deleted successfully" });
+    } catch (error) {
+        return res.status(500).json({ message: "Server error", error: error.message });
+    }
+}
+
+module.exports = { addMeeting, getGroupMeetings, updateMeeting, deleteMeeting };
