@@ -1,5 +1,4 @@
 const express = require("express");
-const { route } = require("./contact");
 const { Router } = express;
 const router = Router();
 const {mpesaAccessToken} = require("../helpers/mpesaAccessToken");
