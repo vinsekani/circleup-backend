@@ -8,11 +8,11 @@ const createGroup = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized: No valid user found" });
     }
 
-    const { name, slogan, dailyContribution } = req.body;
+    const { name, slogan, dailyContribution, uid } = req.body;
     const adminId = req.user.id;
 
     // Check if group name already exists
-    const existingGroup = await Group.findOne({ name });
+    const existingGroup = await Group.findOne({ name, uid });
     if (existingGroup) {
       return res.status(400).json({ message: "Group name already taken" });
     }
@@ -23,9 +23,10 @@ const createGroup = async (req, res) => {
       slogan,
       dailyContribution,
       admin: adminId,
-      members: [adminId], // Add the admin as the first member
-      meetings: [], // Fixed typo: "mettings" → "meetings"
+      members: [adminId],
+      meetings: [],
       announcements: [],
+      uid,
     });
 
     await newGroup.save();

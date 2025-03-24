@@ -8,7 +8,8 @@ const groupSchema = new mongoose.Schema(
     admin: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     members: [{ type: mongoose.Schema.Types.ObjectId, ref: "Member" }],
     meetings: [{type: mongoose.Schema.Types.ObjectId, ref: "Meeting"}],
-    announcements: [{type: mongoose.Schema.Types.ObjectId, ref: "Announcement"}]
+    announcements: [{type: mongoose.Schema.Types.ObjectId, ref: "Announcement"}],
+    uid: { type: String },
   },
   { timestamps: true }
 );
