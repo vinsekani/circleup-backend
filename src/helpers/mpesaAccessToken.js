@@ -1,7 +1,7 @@
 const mpesaAccessToken = async () => {
-  const consumerKey = "wHPXI2maqpbWI9GiesGAxlnYtoqL2G7erI0TcPOC99lp6zuA";
+  const consumerKey = "NqJd87BvynG6scHhyeG4wBWG2v3dBg4Gp4GeBQRUzay2hpDh";
   const consumerSecret =
-    "02DMAaC0xamvNQpQbChAF102z8g54zx8ukHMtRYynWdCAK4ZYSx85DXYN52kHd89";
+    "FCkmNEFLbqXZxmcGp9Jg0qCrSJnK8Hb5ewprjz8oR7q6xamTV9mcWEiKGE38aqAv";
 
   const base64String = Buffer.from(`${consumerKey}:${consumerSecret}`).toString(
     "base64"
