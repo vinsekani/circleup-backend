@@ -56,4 +56,22 @@ const getGroupsByAdmin = async (req, res) => {
 };
 
 
-module.exports = { createGroup, getGroupsByAdmin };
+// In group controller (controllers/group.js)
+const getGroupByUid = async (req, res) => {
+  try {
+    const { uid } = req.params;
+    const group = await Group.findOne({ uid });
+    
+    if (!group) {
+      return res.status(404).json({ message: "No group found for this UID" });
+    }
+
+    return res.status(200).json({ group });
+  } catch (error) {
+    console.error("Error Details:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Add to exports
+module.exports = { createGroup, getGroupsByAdmin, getGroupByUid };
