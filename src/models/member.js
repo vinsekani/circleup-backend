@@ -4,8 +4,9 @@ const memberSchema = new mongoose.Schema(
   {
     fullName: { type: String, required: true },
     phone: { type: String, required: true, unique: true },
-    group: { type: mongoose.Schema.Types.ObjectId, ref: "Group", required: true }, // Belongs to a group
+    group: { type: mongoose.Schema.Types.ObjectId, ref: "Group", required: true },
     status: { type: String, enum: ["paid", "unpaid"], default: "unpaid" },
+    contribution: {type: String, required: true},
     startDate: { type: Date, required: true },
   },
   { timestamps: true }

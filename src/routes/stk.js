@@ -4,6 +4,8 @@ const router = Router();
 const {mpesaAccessToken} = require("../helpers/mpesaAccessToken");
 
 router.post("/stk", async (req, res) => {
+
+  const {phone, amount} = req.body;
   try {
     const token = await mpesaAccessToken();
     const url =
@@ -14,10 +16,10 @@ router.post("/stk", async (req, res) => {
         "MTc0Mzc5YmZiMjc5ZjlhYTliZGJjZjE1OGU5N2RkNzFhNDY3Y2QyZTBjODkzMDU5YjEwZjc4ZTZiNzJhZGExZWQyYzkxOTIwMTYwMjE2MTY1NjI3",
       Timestamp: "20160216165627",
       TransactionType: "CustomerPayBillOnline",
-      Amount: "1",
-      PartyA: "254701665262",
+      Amount: {amount},
+      PartyA: `254${phone.substring(1)}`,
       PartyB: "174379",
-      PhoneNumber: "254701665262",
+      PhoneNumber: `254${phone.substring(1)}`,
       CallBackURL: "https://circleup-backend-9eaf.onrender.com/api/mpesa/stk",
       AccountReference: "Test",
       TransactionDesc: "Test",
