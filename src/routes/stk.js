@@ -6,6 +6,9 @@ const {mpesaAccessToken} = require("../helpers/mpesaAccessToken");
 router.post("/stk", async (req, res) => {
 
   const {phone, amount} = req.body;
+
+  console.log(req.body)
+
   try {
     const token = await mpesaAccessToken();
     const url =
@@ -36,7 +39,6 @@ router.post("/stk", async (req, res) => {
     const response = await fetch(url,options);
     const data = await response.json();
     
-    console.log(req.body)
     console.log(data)
     return res.status(200).json(req.body)
   } catch (error) {
