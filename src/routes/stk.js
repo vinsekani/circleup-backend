@@ -36,6 +36,7 @@ router.post("/stk", async (req, res) => {
     const response = await fetch(url,options);
     const data = await response.json();
     
+    console.log(req.body)
     console.log(data)
     return res.status(200).json(req.body)
   } catch (error) {
