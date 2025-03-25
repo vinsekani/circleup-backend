@@ -16,7 +16,7 @@ router.post("/stk", async (req, res) => {
         "MTc0Mzc5YmZiMjc5ZjlhYTliZGJjZjE1OGU5N2RkNzFhNDY3Y2QyZTBjODkzMDU5YjEwZjc4ZTZiNzJhZGExZWQyYzkxOTIwMTYwMjE2MTY1NjI3",
       Timestamp: "20160216165627",
       TransactionType: "CustomerPayBillOnline",
-      Amount: {amount},
+      Amount: `${amount}`,
       PartyA: `254${phone.substring(1)}`,
       PartyB: "174379",
       PhoneNumber: `254${phone.substring(1)}`,
