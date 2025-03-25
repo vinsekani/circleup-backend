@@ -6,7 +6,7 @@ const memberSchema = new mongoose.Schema(
     phone: { type: String, required: true, unique: true },
     group: { type: mongoose.Schema.Types.ObjectId, ref: "Group", required: true },
     status: { type: String, enum: ["paid", "unpaid"], default: "unpaid" },
-    contribution: {type: String, required: true},
+    // contribution: {type: String, required: true},
     startDate: { type: Date, required: true },
   },
   { timestamps: true }

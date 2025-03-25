@@ -122,9 +122,31 @@ const getGroupsByMember = async (req, res) => {
   }
 };
 
+
+const getGroupById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const group = await Group.findOne({ _id:id });
+
+    if (!group) {
+      return res
+        .status(404)
+        .json({ message: "No group found for Id"});
+    }
+
+    return res.status(200).json({ group });
+  } catch (error) {
+    console.error("Error Details:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
 module.exports = {
   createGroup,
   getGroupsByAdmin,
   getGroupByUid,
   getGroupsByMember,
+  getGroupById,
 };
