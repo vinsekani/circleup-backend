@@ -4,11 +4,11 @@ const bcrypt = require("bcrypt");
 
 const signUp = async (req, res) => {
   try {
-    const { fullName, phone, email, photo, coverPhoto, password, role } = req.body;
+    const { fullName, phone, email, password, role } = req.body;
     const user = await User.findOne({ phone });
 
     if (user) {
-      return res.status(400).json({ message: "user alredy exists" });
+      return res.status(400).json({ message: "User already exists" });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -17,8 +17,6 @@ const signUp = async (req, res) => {
       fullName,
       phone,
       email,
-      photo,
-      coverPhoto,
       password: hashedPassword,
       role,
     });
@@ -41,7 +39,6 @@ const signUp = async (req, res) => {
   }
 };
 
-
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -62,7 +59,7 @@ const login = async (req, res) => {
       path: "/",
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 30 * 24 * 60 * 60 * 1000, 
+      maxAge: 30 * 24 * 60 * 60 * 1000,
     });
 
     const { password: userPassword, ...otherFields } = user._doc;
@@ -73,92 +70,32 @@ const login = async (req, res) => {
   }
 };
 
-// const update = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-
-//     const edit = req.body;
-//     if (req.body.password) {
-//       const hashedPassword = await bcrypt.hash(req.body.password, 10);
-//       req.body.password = hashedPassword;
-//     }
-//     const profile = await User.findByIdAndUpdate(id, edit, {
-//       new: true,
-//     });
-//     console.log(req.params);
-//     return res.status(200).json(profile);
-//   } catch (error) {
-//     console.log(error);
-//     return res.status(500).json({ message: error });
-//   }
-// };
-
-
-const deleteUser = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Ensure the user is authenticated and can only delete their own account
-    if (!req.user || !req.user.id) {
-      return res
-        .status(401)
-        .json({ message: "Unauthorized: No valid user found" });
-    }
-
-    if (req.user.id !== id) {
-      return res
-        .status(403)
-        .json({ message: "Forbidden: You can only delete your own account" });
-    }
-
-    // Delete the user
-    const user = await User.findByIdAndDelete(id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    return res.status(200).json({ message: "Account deleted successfully" });
-  } catch (error) {
-    console.error("Error in deleteUser:", error);
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
-  }
-};
-
-// Fix the update controller to handle file uploads
 const update = async (req, res) => {
   try {
+    console.log("PATCH /api/user/:id - Request received:", req.params, req.body);
     const { id } = req.params;
-
-    // Ensure the user is authenticated and can only update their own account
     if (!req.user || !req.user.id) {
+      console.log("PATCH /api/user/:id - Unauthorized: No valid user found");
       return res
         .status(401)
         .json({ message: "Unauthorized: No valid user found" });
     }
-
     if (req.user.id !== id) {
+      console.log("PATCH /api/user/:id - Forbidden: User ID mismatch");
       return res
         .status(403)
         .json({ message: "Forbidden: You can only update your own account" });
     }
 
     const updateData = { ...req.body };
-
-    // Hash the password if provided
+    if (updateData.email && !updateData.email.includes("@")) {
+      return res.status(400).json({ message: "Invalid email address" });
+    }
+    if (updateData.phone && updateData.phone.length < 10) {
+      return res.status(400).json({ message: "Phone number must be at least 10 digits" });
+    }
     if (updateData.password) {
       updateData.password = await bcrypt.hash(updateData.password, 10);
-    }
-
-    // Handle file uploads (photo and coverPhoto)
-    if (req.files) {
-      if (req.files.photo) {
-        updateData.photo = req.files.photo[0].path; // Adjust based on your file upload setup
-      }
-      if (req.files.coverPhoto) {
-        updateData.coverPhoto = req.files.coverPhoto[0].path; // Adjust based on your file upload setup
-      }
     }
 
     const updatedUser = await User.findByIdAndUpdate(id, updateData, {
@@ -173,6 +110,39 @@ const update = async (req, res) => {
     return res.status(200).json(otherFields);
   } catch (error) {
     console.error("Error in update:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
+const deleteUser = async (req, res) => {
+  try {
+    console.log("DELETE /api/user/:id - Request received:", req.params);
+    const { id } = req.params;
+
+    if (!req.user || !req.user.id) {
+      console.log("DELETE /api/user/:id - Unauthorized: No valid user found");
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: No valid user found" });
+    }
+
+    if (req.user.id !== id) {
+      console.log("DELETE /api/user/:id - Forbidden: User ID mismatch");
+      return res
+        .status(403)
+        .json({ message: "Forbidden: You can only delete your own account" });
+    }
+
+    const user = await User.findByIdAndDelete(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({ message: "Account deleted successfully" });
+  } catch (error) {
+    console.error("Error in deleteUser:", error);
     return res
       .status(500)
       .json({ message: "Server error", error: error.message });
