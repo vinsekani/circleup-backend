@@ -88,13 +88,15 @@ const update = async (req, res) => {
     }
 
     const updateData = { ...req.body };
-    if (updateData.email && !updateData.email.includes("@")) {
+
+    // Only validate the fields that are being updated
+    if ("email" in updateData && !updateData.email.includes("@")) {
       return res.status(400).json({ message: "Invalid email address" });
     }
-    if (updateData.phone && updateData.phone.length < 10) {
+    if ("phone" in updateData && updateData.phone.length < 10) {
       return res.status(400).json({ message: "Phone number must be at least 10 digits" });
     }
-    if (updateData.password) {
+    if ("password" in updateData) {
       updateData.password = await bcrypt.hash(updateData.password, 10);
     }
 
