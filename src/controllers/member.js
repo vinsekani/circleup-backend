@@ -3,8 +3,10 @@ const Group = require("../models/group");
 
 // Add Member to Group
 const addMember = async (req, res) => {
+
+
   try {
-    const { fullName, phone, groupId, startDate } = req.body;
+    const { fullName, phone, groupId, startDate, contribution } = req.body;
 
     // Validate input
     if (!fullName || !phone || !groupId) {
@@ -26,6 +28,7 @@ const addMember = async (req, res) => {
       phone,
       group: groupId,
       status: "unpaid",
+      contribution,
       startDate,
     });
     await newMember.save();
