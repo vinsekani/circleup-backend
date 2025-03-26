@@ -139,6 +139,92 @@ const getGroupById = async (req, res) => {
   }
 };
 
+// Update Group
+const updateGroup = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: No valid user found" });
+    }
+
+    const { id } = req.params;
+    const { name, slogan, amount, uid } = req.body;
+    const adminId = req.user.id;
+
+    // Find the group
+    const group = await Group.findById(id);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    // Check if the user is the admin of the group
+    if (group.admin.toString() !== adminId) {
+      return res
+        .status(403)
+        .json({ message: "Forbidden: You are not the admin of this group" });
+    }
+
+    // Check if the new group name is already taken (if name is being updated)
+    if (name && name !== group.name) {
+      const existingGroup = await Group.findOne({ name, uid });
+      if (existingGroup) {
+        return res.status(400).json({ message: "Group name already taken" });
+      }
+    }
+
+    // Update the group
+    group.name = name || group.name;
+    group.slogan = slogan || group.slogan;
+    group.amount = amount || group.amount;
+    group.uid = uid || group.uid;
+
+    await group.save();
+    return res.status(200).json(group);
+  } catch (error) {
+    console.error("Error in updateGroup:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
+// Delete Group
+const deleteGroup = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: No valid user found" });
+    }
+
+    const { id } = req.params;
+    const adminId = req.user.id;
+
+    // Find the group
+    const group = await Group.findById(id);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
+    // Check if the user is the admin of the group
+    if (group.admin.toString() !== adminId) {
+      return res
+        .status(403)
+        .json({ message: "Forbidden: You are not the admin of this group" });
+    }
+
+    // Delete the group
+    await Group.deleteOne({ _id: id });
+    return res.status(200).json({ message: "Group deleted successfully" });
+  } catch (error) {
+    console.error("Error in deleteGroup:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+};
+
 module.exports = { getGroupById };
 
 module.exports = {
@@ -147,4 +233,6 @@ module.exports = {
   getGroupByUid,
   getGroupsByMember,
   getGroupById,
+  deleteGroup,
+  updateGroup
 };
