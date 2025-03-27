@@ -50,6 +50,15 @@
 // module.exports = router;
 
 
+const express = require("express");
+const { Router } = express;
+const router = Router();
+const { mpesaAccessToken } = require("../helpers/mpesaAccessToken");
+const Contribution = require("../models/contribution");
+const User = require("../models/user");
+const Group = require("../models/group");
+const Member = require("../models/member");
+
 router.post("/stk", async (req, res) => {
   const { phone, amount, groupId, memberId } = req.body;
 
@@ -143,3 +152,5 @@ router.post("/stk", async (req, res) => {
     return res.status(500).json({ message: "Server error", error: error.message });
   }
 });
+
+module.exports = router;
