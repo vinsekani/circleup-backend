@@ -9,13 +9,13 @@ const userSchema = new mongoose.Schema(
       type: String,
       require,
       default:
-        "https://res.cloudinary.com/oroko/image/upload/v1738214185/og5jorctnuzqifdbywel.jpg",
+        "https://res.cloudinary.com/oroko/image/upload/v1737614653/user_pigxco.jpg",
     },
     coverPhoto:{
       type: String,
       require,
       default:
-        "https://res.cloudinary.com/oroko/image/upload/v1738214455/zqio0mxzgkqyopewbxhg.jpg",
+        "https://res.cloudinary.com/oroko/image/upload/v1743060143/pro_mv5bst.png",
     },
     password: { type: String, require },
     role: { type: String, required: true, enum: ["admin", "member"] },
