@@ -61,14 +61,16 @@ router.get("/user/:userId/group/:groupId", verifyToken, async (req, res) => {
         await member.save();
         console.log("Member created:", member);
 
-        // Add the member to the group's members array
         group.members.push(member._id);
         await group.save();
       } catch (error) {
         if (error.code === 11000) {
-          return res.status(400).json({ message: "A member with this user and group already exists" });
+          // Duplicate key error, fetch the existing member
+          member = await Member.findOne({ user: userId, group: groupId });
+          console.log("Fetched existing member after duplicate error:", member);
+        } else {
+          throw error;
         }
-        throw error;
       }
     }
 
