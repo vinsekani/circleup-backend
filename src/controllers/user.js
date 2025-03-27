@@ -1,4 +1,6 @@
 const User = require("../models/user");
+const Group = require("../models/group");
+const Member = require("../models/member"); // Import the Member model
 const { generateToken } = require("../helpers/generateToken");
 const bcrypt = require("bcrypt");
 
@@ -72,16 +74,16 @@ const login = async (req, res) => {
 
 const update = async (req, res) => {
   try {
-    console.log("PATCH /api/user/:id - Request received:", req.params, req.body);
+    console.log("PATCH /api/auth/:id - Request received:", req.params, req.body);
     const { id } = req.params;
     if (!req.user || !req.user.id) {
-      console.log("PATCH /api/user/:id - Unauthorized: No valid user found");
+      console.log("PATCH /api/auth/:id - Unauthorized: No valid user found");
       return res
         .status(401)
         .json({ message: "Unauthorized: No valid user found" });
     }
     if (req.user.id !== id) {
-      console.log("PATCH /api/user/:id - Forbidden: User ID mismatch");
+      console.log("PATCH /api/auth/:id - Forbidden: User ID mismatch");
       return res
         .status(403)
         .json({ message: "Forbidden: You can only update your own account" });
@@ -89,7 +91,6 @@ const update = async (req, res) => {
 
     const updateData = { ...req.body };
 
-    // Only validate the fields that are being updated
     if ("email" in updateData && !updateData.email.includes("@")) {
       return res.status(400).json({ message: "Invalid email address" });
     }
@@ -120,23 +121,40 @@ const update = async (req, res) => {
 
 const deleteUser = async (req, res) => {
   try {
-    console.log("DELETE /api/user/:id - Request received:", req.params);
+    console.log("DELETE /api/auth/:id - Request received:", req.params);
     const { id } = req.params;
 
     if (!req.user || !req.user.id) {
-      console.log("DELETE /api/user/:id - Unauthorized: No valid user found");
+      console.log("DELETE /api/auth/:id - Unauthorized: No valid user found");
       return res
         .status(401)
         .json({ message: "Unauthorized: No valid user found" });
     }
 
     if (req.user.id !== id) {
-      console.log("DELETE /api/user/:id - Forbidden: User ID mismatch");
+      console.log("DELETE /api/auth/:id - Forbidden: User ID mismatch");
       return res
         .status(403)
         .json({ message: "Forbidden: You can only delete your own account" });
     }
 
+    // Check if the user is an admin
+    if (req.user.role === "admin") {
+      console.log(`Admin user ${id} is being deleted. Deleting associated groups...`);
+      // Find all groups where the user is the admin
+      const groups = await Group.find({ admin: id });
+      const groupIds = groups.map((group) => group._id);
+
+      // Delete all members associated with these groups
+      const deletedMembers = await Member.deleteMany({ _id: { $in: groups.flatMap((group) => group.members) } });
+      console.log(`Deleted ${deletedMembers.deletedCount} members from groups created by admin ${id}`);
+
+      // Delete the groups (this will trigger the middleware to delete meetings and announcements)
+      const deletedGroups = await Group.deleteMany({ admin: id });
+      console.log(`Deleted ${deletedGroups.deletedCount} groups created by admin ${id}`);
+    }
+
+    // Delete the user
     const user = await User.findByIdAndDelete(id);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
