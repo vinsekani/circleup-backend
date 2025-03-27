@@ -20,29 +20,30 @@ const Member = require("../models/member");
 const User = require("../models/user");
 const Group = require("../models/group");
 
-// Existing routes
 router.post("/new", verifyToken, addMember);
 router.get("/:groupId", verifyToken, getGroupMembers);
 router.put("/:id", verifyToken, editMember);
 router.delete("/:id", verifyToken, deleteMember);
 
-// New endpoint to fetch or create a member based on user and group
 router.get("/user/:userId/group/:groupId", verifyToken, async (req, res) => {
   try {
     const userId = req.params.userId;
     const groupId = req.params.groupId;
 
-    // Check if a member exists for this user and group
+    console.log(`Fetching member for user: ${userId}, group: ${groupId}`);
+
     let member = await Member.findOne({ user: userId, group: groupId });
+    console.log("Member found:", member);
 
     if (!member) {
-      // If no member exists, create one
       const user = await User.findById(userId);
+      console.log("User found:", user);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
 
       const group = await Group.findById(groupId);
+      console.log("Group found:", group);
       if (!group) {
         return res.status(404).json({ message: "Group not found" });
       }
@@ -50,12 +51,13 @@ router.get("/user/:userId/group/:groupId", verifyToken, async (req, res) => {
       member = new Member({
         user: userId,
         group: groupId,
-        fullName: user.fullName || user.email.split("@")[0], // Fallback to email prefix if fullName is not available
+        fullName: user.fullName || user.email.split("@")[0],
         phone: user.phone,
         status: "unpaid",
         startDate: new Date(),
       });
       await member.save();
+      console.log("Member created:", member);
     }
 
     res.json({ member });
