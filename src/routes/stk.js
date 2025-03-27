@@ -65,12 +65,10 @@ router.post("/stk", async (req, res) => {
   console.log("STK Push Request Body:", req.body);
 
   try {
-    // Validate input
     if (!phone || !amount || !groupId || !memberId) {
       return res.status(400).json({ message: "Phone, amount, groupId, and memberId are required" });
     }
 
-    // Find the user, group, and member
     const user = await User.findOne({ phone });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -86,10 +84,8 @@ router.post("/stk", async (req, res) => {
       return res.status(404).json({ message: "Member not found" });
     }
 
-    // Create a pending contribution record
     const contribution = new Contribution({
       user: user._id,
-      member: member._id,
       group: group._id,
       amount,
       status: "Pending",
@@ -97,19 +93,16 @@ router.post("/stk", async (req, res) => {
     });
     await contribution.save();
 
-    // Get M-Pesa access token
     const token = await mpesaAccessToken();
     const url = "https://sandbox.safaricom.co.ke/mpesa/stkpush/v1/processrequest";
 
-    // Generate timestamp for M-Pesa
     const timestamp = new Date()
       .toISOString()
       .replace(/[^0-9]/g, "")
       .slice(0, -3);
 
-    // Use environment variables for sensitive data in production
     const shortCode = "174379";
-    const passkey = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919"; // Replace with your passkey
+    const passkey = "bfb279f9aa9bdbcf158e97dd71a467cd2e0c893059b10f78e6b72ada1ed2c919";
     const password = Buffer.from(`${shortCode}${passkey}${timestamp}`).toString("base64");
 
     const body = {
@@ -141,13 +134,11 @@ router.post("/stk", async (req, res) => {
     console.log("M-Pesa STK Push Response:", data);
 
     if (data.ResponseCode === "0") {
-      // STK Push initiated successfully
       return res.status(200).json({
         message: "Payment initiated successfully",
         contributionId: contribution._id,
       });
     } else {
-      // Update contribution status to "Failed" if STK Push fails
       contribution.status = "Failed";
       await contribution.save();
       return res.status(400).json({ message: "Failed to initiate payment", error: data });
@@ -158,7 +149,6 @@ router.post("/stk", async (req, res) => {
   }
 });
 
-// Callback endpoint to handle M-Pesa response
 router.post("/callback", async (req, res) => {
   console.log("M-Pesa Callback Body:", req.body);
 
@@ -170,22 +160,17 @@ router.post("/callback", async (req, res) => {
   const { ResultCode, ResultDesc, CallbackMetadata } = Body.stkCallback;
 
   try {
-    // Find the contribution (you may need to store CheckoutRequestID in the Contribution model to match it)
-    // For simplicity, we'll assume the contributionId is passed in the AccountReference or another mechanism
-    // In a real app, you'd store the CheckoutRequestID when initiating the STK Push
-    const contribution = await Contribution.findOne({ status: "Pending" }).sort({ createdAt: -1 }); // Temporary workaround
+    const contribution = await Contribution.findOne({ status: "Pending" }).sort({ createdAt: -1 });
 
     if (!contribution) {
       return res.status(404).json({ message: "Contribution not found" });
     }
 
     if (ResultCode === "0") {
-      // Payment successful
       contribution.status = "Paid";
       contribution.date = new Date();
 
-      // Update the member's status to "paid"
-      const member = await Member.findById(contribution.member);
+      const member = await Member.findOne({ user: contribution.user, group: contribution.group });
       if (member) {
         member.status = "paid";
         await member.save();
@@ -194,7 +179,6 @@ router.post("/callback", async (req, res) => {
       await contribution.save();
       console.log("Payment successful, contribution updated:", contribution);
     } else {
-      // Payment failed
       contribution.status = "Failed";
       await contribution.save();
       console.log("Payment failed:", ResultDesc);

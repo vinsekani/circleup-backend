@@ -36,10 +36,9 @@ const {
   deleteGroup,
 } = require("../controllers/group");
 
-// Existing routes
 router.post("/new", authenticateUser, createGroup);
 router.get("/admin", authenticateUser, getGroupsByAdmin);
-router.get("/uid/:uid", authenticateUser, getGroupByUid); // Added authenticateUser middleware
+router.get("/uid/:uid", authenticateUser, getGroupByUid);
 router.get("/member", authenticateUser, getGroupsByMember);
 router.get("/:id", authenticateUser, getGroupById);
 router.put("/:id", authenticateUser, updateGroup);

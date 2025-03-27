@@ -56,14 +56,26 @@ router.get("/user/:userId/group/:groupId", verifyToken, async (req, res) => {
         status: "unpaid",
         startDate: new Date(),
       });
-      await member.save();
-      console.log("Member created:", member);
+
+      try {
+        await member.save();
+        console.log("Member created:", member);
+
+        // Add the member to the group's members array
+        group.members.push(member._id);
+        await group.save();
+      } catch (error) {
+        if (error.code === 11000) {
+          return res.status(400).json({ message: "A member with this user and group already exists" });
+        }
+        throw error;
+      }
     }
 
     res.json({ member });
   } catch (error) {
     console.error("Error fetching or creating member:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
