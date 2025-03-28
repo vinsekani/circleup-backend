@@ -67,10 +67,10 @@ router.post("/stk", verifyToken, async (req, res) => {
   }
 
   try {
-    // Find the member by userId and phone
-    const member = await Member.findOne({ phone });
+    // Find the member by userId (memberId) and phone
+    const member = await Member.findOne({ _id: userId, phone });
     if (!member) {
-      return res.status(404).json({ success: false, message: "Member not found" });
+      return res.status(404).json({ success: false, message: "Member not found or credentials mismatch" });
     }
 
     // Get the group details
@@ -115,7 +115,7 @@ router.post("/stk", verifyToken, async (req, res) => {
     if (data.ResponseCode === "0") {
       const todayDate = getTodayDate();
       const contribution = await Contribution.create({
-        userId,
+        userId, // Store memberId here
         group: group.name,
         amount: group.amount,
         status: "Paid",
@@ -126,7 +126,7 @@ router.post("/stk", verifyToken, async (req, res) => {
       tomorrow.setDate(tomorrow.getDate() + 1);
       const tomorrowDate = `${tomorrow.getDate()}/${tomorrow.getMonth() + 1}/${tomorrow.getFullYear()}`;
       await Contribution.create({
-        userId,
+        userId, // Store memberId here
         group: group.name,
         amount: group.amount,
         status: "Upcoming",
