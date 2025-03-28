@@ -57,8 +57,11 @@ const { mpesaAccessToken } = require("../helpers/mpesaAccessToken");
 const Contribution = require("../models/Contribution");
 
 router.post("/stk", async (req, res) => {
-  const { phone, amount, userId } = req.body;
-  const group = JSON.parse(localStorage.getItem("group")); // Note: This should come from req.body or auth
+  const { phone, amount, userId, groupName } = req.body;
+
+  if (!phone || !amount || !userId || !groupName) {
+    return res.status(400).json({ success: false, message: "Missing required fields" });
+  }
 
   try {
     const token = await mpesaAccessToken();
@@ -92,43 +95,38 @@ router.post("/stk", async (req, res) => {
     });
     const data = await response.json();
 
+    console.log("M-Pesa Response:", data);
+
     if (data.ResponseCode === "0") {
-      // Save the contribution as Paid
+      const todayDate = getTodayDate();
       const contribution = await Contribution.create({
         userId,
-        group: group.name,
+        group: groupName,
         amount,
         status: "Paid",
-        date: getTodayDate()
+        date: todayDate
       });
 
-      // Create next day's contribution
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowDate = `${tomorrow.getDate()}/${tomorrow.getMonth() + 1}/${tomorrow.getFullYear()}`;
       await Contribution.create({
         userId,
-        group: group.name,
+        group: groupName,
         amount,
         status: "Upcoming",
-        date: `${tomorrow.getDate()}/${tomorrow.getMonth() + 1}/${tomorrow.getFullYear()}`
+        date: tomorrowDate
       });
 
-      return res.status(200).json({ 
-        success: true, 
-        contribution 
-      });
+      return res.status(200).json({ success: true, contribution });
     }
-    return res.status(400).json({ 
-      success: false, 
-      message: data.errorMessage 
-    });
+    return res.status(400).json({ success: false, message: data.errorMessage || "Payment initiation failed" });
   } catch (error) {
-    console.error(error);
+    console.error("Payment Error:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
 
-// Get contribution history
 router.get("/history/:userId", async (req, res) => {
   try {
     const history = await Contribution.find({ 
@@ -137,23 +135,39 @@ router.get("/history/:userId", async (req, res) => {
     }).sort({ createdAt: -1 });
     res.status(200).json(history);
   } catch (error) {
-    console.error(error);
+    console.error("History Fetch Error:", error);
     res.status(500).json({ message: "Error fetching history" });
   }
 });
 
-// Get current contribution
 router.get("/current/:userId", async (req, res) => {
   try {
-    const contribution = await Contribution.findOne({ 
+    let contribution = await Contribution.findOne({ 
       userId: req.params.userId,
       status: "Upcoming" 
     });
-    res.status(200).json(contribution || {});
+
+    if (!contribution) {
+      const today = new Date();
+      const date = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+      contribution = await Contribution.create({
+        userId: req.params.userId,
+        group: "Lions", // Fallback, should ideally come from user data
+        amount: 200,    // Fallback
+        status: "Upcoming",
+        date
+      });
+    }
+    res.status(200).json(contribution);
   } catch (error) {
-    console.error(error);
+    console.error("Current Fetch Error:", error);
     res.status(500).json({ message: "Error fetching current contribution" });
   }
+});
+
+router.post("/callback", async (req, res) => {
+  console.log("Callback received:", req.body);
+  res.status(200).json({ message: "Callback received" });
 });
 
 function getTodayDate() {
