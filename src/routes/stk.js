@@ -157,7 +157,13 @@ router.get("/history/:userId", verifyToken, async (req, res) => {
 
 router.get("/current/:userId", verifyToken, async (req, res) => {
   try {
-    const member = await Member.findOne({ phone: req.user.phone });
+    console.log("User from token:", req.user); // Debug log
+    const userId = req.params.userId;
+
+    let member = await Member.findOne({ _id: userId });
+    if (!member && req.user.phone) {
+      member = await Member.findOne({ phone: req.user.phone });
+    }
     if (!member) {
       return res.status(404).json({ message: "Member not found" });
     }
@@ -168,7 +174,7 @@ router.get("/current/:userId", verifyToken, async (req, res) => {
     }
 
     let contribution = await Contribution.findOne({ 
-      userId: req.params.userId,
+      userId,
       status: "Upcoming" 
     });
 
@@ -176,7 +182,7 @@ router.get("/current/:userId", verifyToken, async (req, res) => {
       const today = new Date();
       const date = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
       contribution = await Contribution.create({
-        userId: req.params.userId,
+        userId,
         group: group.name,
         amount: group.amount,
         status: "Upcoming",
@@ -186,7 +192,7 @@ router.get("/current/:userId", verifyToken, async (req, res) => {
     res.status(200).json(contribution);
   } catch (error) {
     console.error("Current Fetch Error:", error);
-    res.status(500).json({ message: "Error fetching current contribution" });
+    res.status(500).json({ message: "Error fetching current contribution", error: error.message });
   }
 });
 
