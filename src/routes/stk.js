@@ -55,15 +55,30 @@ const { Router } = express;
 const router = Router();
 const { mpesaAccessToken } = require("../helpers/mpesaAccessToken");
 const Contribution = require("../models/Contribution");
+const Group = require("../models/group");
+const Member = require("../models/member");
+const { verifyToken } = require("../middleware/auth");
 
-router.post("/stk", async (req, res) => {
-  const { phone, amount, userId, groupName } = req.body;
+router.post("/stk", verifyToken, async (req, res) => {
+  const { phone, userId } = req.body;
 
-  if (!phone || !amount || !userId || !groupName) {
+  if (!phone || !userId) {
     return res.status(400).json({ success: false, message: "Missing required fields" });
   }
 
   try {
+    // Find the member by userId and phone
+    const member = await Member.findOne({ phone });
+    if (!member) {
+      return res.status(404).json({ success: false, message: "Member not found" });
+    }
+
+    // Get the group details
+    const group = await Group.findById(member.group);
+    if (!group) {
+      return res.status(404).json({ success: false, message: "Group not found" });
+    }
+
     const token = await mpesaAccessToken();
     const timestamp = new Date().toISOString().replace(/[^0-9]/g, "").slice(0, 14);
     const password = Buffer.from(
@@ -76,7 +91,7 @@ router.post("/stk", async (req, res) => {
       Password: password,
       Timestamp: timestamp,
       TransactionType: "CustomerPayBillOnline",
-      Amount: amount,
+      Amount: group.amount,
       PartyA: `254${phone.substring(1)}`,
       PartyB: "174379",
       PhoneNumber: `254${phone.substring(1)}`,
@@ -101,8 +116,8 @@ router.post("/stk", async (req, res) => {
       const todayDate = getTodayDate();
       const contribution = await Contribution.create({
         userId,
-        group: groupName,
-        amount,
+        group: group.name,
+        amount: group.amount,
         status: "Paid",
         date: todayDate
       });
@@ -112,8 +127,8 @@ router.post("/stk", async (req, res) => {
       const tomorrowDate = `${tomorrow.getDate()}/${tomorrow.getMonth() + 1}/${tomorrow.getFullYear()}`;
       await Contribution.create({
         userId,
-        group: groupName,
-        amount,
+        group: group.name,
+        amount: group.amount,
         status: "Upcoming",
         date: tomorrowDate
       });
@@ -127,7 +142,7 @@ router.post("/stk", async (req, res) => {
   }
 });
 
-router.get("/history/:userId", async (req, res) => {
+router.get("/history/:userId", verifyToken, async (req, res) => {
   try {
     const history = await Contribution.find({ 
       userId: req.params.userId,
@@ -140,8 +155,18 @@ router.get("/history/:userId", async (req, res) => {
   }
 });
 
-router.get("/current/:userId", async (req, res) => {
+router.get("/current/:userId", verifyToken, async (req, res) => {
   try {
+    const member = await Member.findOne({ phone: req.user.phone });
+    if (!member) {
+      return res.status(404).json({ message: "Member not found" });
+    }
+
+    const group = await Group.findById(member.group);
+    if (!group) {
+      return res.status(404).json({ message: "Group not found" });
+    }
+
     let contribution = await Contribution.findOne({ 
       userId: req.params.userId,
       status: "Upcoming" 
@@ -152,8 +177,8 @@ router.get("/current/:userId", async (req, res) => {
       const date = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
       contribution = await Contribution.create({
         userId: req.params.userId,
-        group: "Lions", // Fallback, should ideally come from user data
-        amount: 200,    // Fallback
+        group: group.name,
+        amount: group.amount,
         status: "Upcoming",
         date
       });
