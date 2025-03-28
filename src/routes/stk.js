@@ -60,17 +60,17 @@ const Member = require("../models/member");
 const { verifyToken } = require("../middleware/auth");
 
 router.post("/stk", verifyToken, async (req, res) => {
-  const { phone, userId } = req.body;
+  const { phone } = req.body;
 
-  if (!phone || !userId) {
+  if (!phone) {
     return res.status(400).json({ success: false, message: "Missing required fields" });
   }
 
   try {
-    // Find the member by userId (memberId) and phone
-    const member = await Member.findOne({ _id: userId, phone });
+    // Find the member by phone
+    const member = await Member.findOne({ phone });
     if (!member) {
-      return res.status(404).json({ success: false, message: "Member not found or credentials mismatch" });
+      return res.status(404).json({ success: false, message: "Member not found" });
     }
 
     // Get the group details
@@ -78,6 +78,9 @@ router.post("/stk", verifyToken, async (req, res) => {
     if (!group) {
       return res.status(404).json({ success: false, message: "Group not found" });
     }
+
+    // Use req.user.id from the token as the userId
+    const userId = req.user.id;
 
     const token = await mpesaAccessToken();
     const timestamp = new Date().toISOString().replace(/[^0-9]/g, "").slice(0, 14);
@@ -115,7 +118,7 @@ router.post("/stk", verifyToken, async (req, res) => {
     if (data.ResponseCode === "0") {
       const todayDate = getTodayDate();
       const contribution = await Contribution.create({
-        userId, // Store memberId here
+        user: userId, // Use req.user.id
         group: group.name,
         amount: group.amount,
         status: "Paid",
@@ -126,7 +129,7 @@ router.post("/stk", verifyToken, async (req, res) => {
       tomorrow.setDate(tomorrow.getDate() + 1);
       const tomorrowDate = `${tomorrow.getDate()}/${tomorrow.getMonth() + 1}/${tomorrow.getFullYear()}`;
       await Contribution.create({
-        userId, // Store memberId here
+        user: userId, // Use req.user.id
         group: group.name,
         amount: group.amount,
         status: "Upcoming",
@@ -141,6 +144,7 @@ router.post("/stk", verifyToken, async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+
 
 router.get("/history/:userId", verifyToken, async (req, res) => {
   try {
