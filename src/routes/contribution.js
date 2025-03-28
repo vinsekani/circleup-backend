@@ -1,7 +1,7 @@
 const express = require("express");
 const { Router } = express;
 const router = Router();
-const Contribution = require("../models/contribution");
+const Contribution = require("../models/Contribution");
 const User = require("../models/user");
 const Group = require("../models/group");
 const { verifyToken } = require("../middleware/auth");
